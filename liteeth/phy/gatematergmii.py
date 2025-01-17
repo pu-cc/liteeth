@@ -144,7 +144,7 @@ class LiteEthPHYRGMIICRG(LiteXModule):
             Instance("CC_ODDR",
                 p_CLK_INV = 0,
                 i_CLK     = ClockSignal("eth_tx"),
-                i_DDR     = ~ClockSignal("eth_tx"),
+                i_DDR     = ClockSignal("eth_tx"),
                 i_D0      = 0,
                 i_D1      = 1,
                 o_Q       = eth_tx_clk_o,
