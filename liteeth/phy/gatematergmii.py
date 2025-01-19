@@ -20,6 +20,13 @@ from liteeth.common import *
 from liteeth.phy.common import *
 
 
+# Timing data for each performance mode
+iodly_timing = {
+    "speed":    {"best": 30e-12, "typ": 38e-12, "worst": 50e-12},
+    "economy":  {"best": 38e-12, "typ": 50e-12, "worst": 65e-12},
+    "lowpower": {"best": 50e-12, "typ": 65e-12, "worst": 85e-12},
+}
+
 class LiteEthPHYRGMIITX(LiteXModule):
     def __init__(self, pads):
         self.sink = sink = stream.Endpoint(eth_phy_description(8))
@@ -60,12 +67,7 @@ class LiteEthPHYRGMIIRX(LiteXModule):
     def __init__(self, pads, rx_delay=2e-9, perf_mode="undefined"):
         self.source = source = stream.Endpoint(eth_phy_description(8))
 
-        self._iodly  = { # TODO
-            "undefined" : 50e-12,
-            "lowpower"  : 75e-12,
-            "economy"   : 50e-12,
-            "speed"     : 25e-12
-        }[perf_mode.lower()]
+        self._iodly = iodly_timing[perf_mode.lower()]["worst"]
 
         rx_delay_taps = int(rx_delay/self._iodly)
         assert rx_delay_taps < 16
@@ -129,12 +131,7 @@ class LiteEthPHYRGMIICRG(LiteXModule):
         self.cd_eth_tx = ClockDomain()
         self.comb += self.cd_eth_tx.clk.eq(self.cd_eth_rx.clk)
 
-        self._iodly  = { # TODO
-            "undefined" : 50e-12,
-            "lowpower"  : 75e-12,
-            "economy"   : 50e-12,
-            "speed"     : 25e-12
-        }[perf_mode.lower()]
+        self._iodly = iodly_timing[perf_mode.lower()]["worst"]
 
         tx_delay_taps = int(tx_delay/self._iodly)
         assert tx_delay_taps < 16
