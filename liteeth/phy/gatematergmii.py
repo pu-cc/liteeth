@@ -64,13 +64,13 @@ class LiteEthPHYRGMIITX(LiteXModule):
         self.comb += sink.ready.eq(1)
 
 class LiteEthPHYRGMIIRX(LiteXModule):
-    def __init__(self, pads, rx_delay=2e-9, perf_mode="undefined"):
+    def __init__(self, pads, rx_delay=0e-9, perf_mode="speed"):
         self.source = source = stream.Endpoint(eth_phy_description(8))
 
         self._iodly = iodly_timing[perf_mode.lower()]["worst"]
 
         rx_delay_taps = int(rx_delay/self._iodly)
-        assert rx_delay_taps < 16
+        assert rx_delay_taps <= 16
 
         rx_ctl_delayf  = Signal()
         rx_ctl         = Signal(2)
@@ -120,7 +120,7 @@ class LiteEthPHYRGMIIRX(LiteXModule):
         self.comb += source.last.eq(last)
 
 class LiteEthPHYRGMIICRG(LiteXModule):
-    def __init__(self, clock_pads, pads, with_hw_init_reset, tx_delay=2e-9, perf_mode="undefined"):
+    def __init__(self, clock_pads, pads, with_hw_init_reset, tx_delay=0e-9, perf_mode="speed"):
         self._reset = CSRStorage()
 
         # RX Clock
@@ -134,7 +134,7 @@ class LiteEthPHYRGMIICRG(LiteXModule):
         self._iodly = iodly_timing[perf_mode.lower()]["worst"]
 
         tx_delay_taps = int(tx_delay/self._iodly)
-        assert tx_delay_taps < 16
+        assert tx_delay_taps <= 16
 
         eth_tx_clk_o = Signal()
         self.specials += [
@@ -172,9 +172,9 @@ class LiteEthPHYRGMII(LiteXModule):
     tx_clk_freq = 125e6
     rx_clk_freq = 125e6
     def __init__(self, clock_pads, pads, with_hw_init_reset=True,
-        tx_delay           = 0e-9,
-        rx_delay           = 0e-9,
-        perf_mode          = "undefined"
+        tx_delay           = 0e-10,
+        rx_delay           = 0e-10,
+        perf_mode          = "speed"
         ):
         self.crg = LiteEthPHYRGMIICRG(clock_pads, pads, with_hw_init_reset, tx_delay, perf_mode)
         self.tx  = ClockDomainsRenamer("eth_tx")(LiteEthPHYRGMIITX(pads))
