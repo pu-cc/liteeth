@@ -31,19 +31,19 @@ class LiteEthPHYRGMIITX(LiteXModule):
     def __init__(self, pads):
         self.sink = sink = stream.Endpoint(eth_phy_description(8))
 
-        tx_ctl_oddrx1f  = Signal()
-        tx_data_oddrx1f = Signal(4)
+        tx_ctl_oddr  = Signal()
+        tx_data_oddr = Signal(4)
 
         self.specials += [
             DDROutput(
                 clk = ClockSignal("eth_tx"),
                 i1  = sink.valid,
                 i2  = sink.valid,
-                o   = tx_ctl_oddrx1f,
+                o   = tx_ctl_oddr,
             ),
             Instance("CC_OBUF",
                 p_DELAY_OBF = 0,
-                i_A         = tx_ctl_oddrx1f,
+                i_A         = tx_ctl_oddr,
                 o_O         = pads.tx_ctl,
             )
         ]
@@ -53,21 +53,21 @@ class LiteEthPHYRGMIITX(LiteXModule):
                     clk = ClockSignal("eth_tx"),
                     i1  = sink.data[i],
                     i2  = sink.data[4+i],
-                    o   = tx_data_oddrx1f[i],
+                    o   = tx_data_oddr[i],
                 ),
                 Instance("CC_OBUF",
                     p_DELAY_OBF = 0,
-                    i_A         = tx_data_oddrx1f[i],
+                    i_A         = tx_data_oddr[i],
                     o_O         = pads.tx_data[i],
                 )
             ]
         self.comb += sink.ready.eq(1)
 
 class LiteEthPHYRGMIIRX(LiteXModule):
-    def __init__(self, pads, rx_delay=0e-9, perf_mode="speed"):
+    def __init__(self, pads, rx_delay=0e-9, perf_mode="speed", corner="worst"):
         self.source = source = stream.Endpoint(eth_phy_description(8))
 
-        self._iodly = iodly_timing[perf_mode.lower()]["worst"]
+        self._iodly = iodly_timing[perf_mode.lower()][corner.lower()]
 
         rx_delay_taps = int(rx_delay/self._iodly)
         assert rx_delay_taps <= 16
@@ -120,7 +120,7 @@ class LiteEthPHYRGMIIRX(LiteXModule):
         self.comb += source.last.eq(last)
 
 class LiteEthPHYRGMIICRG(LiteXModule):
-    def __init__(self, clock_pads, pads, with_hw_init_reset, tx_delay=0e-9, perf_mode="speed"):
+    def __init__(self, clock_pads, pads, with_hw_init_reset, tx_delay=0e-9, perf_mode="speed", corner="worst"):
         self._reset = CSRStorage()
 
         # RX Clock
@@ -131,20 +131,18 @@ class LiteEthPHYRGMIICRG(LiteXModule):
         self.cd_eth_tx = ClockDomain()
         self.comb += self.cd_eth_tx.clk.eq(self.cd_eth_rx.clk)
 
-        self._iodly = iodly_timing[perf_mode.lower()]["worst"]
+        self._iodly = iodly_timing[perf_mode.lower()][corner.lower()]
 
         tx_delay_taps = int(tx_delay/self._iodly)
         assert tx_delay_taps <= 16
 
         eth_tx_clk_o = Signal()
         self.specials += [
-            Instance("CC_ODDR",
-                p_CLK_INV = 0,
-                i_CLK     = ClockSignal("eth_tx"),
-                i_DDR     = ClockSignal("eth_tx"),
-                i_D0      = 0,
-                i_D1      = 1,
-                o_Q       = eth_tx_clk_o,
+            DDROutput(
+                clk = ClockSignal("eth_tx"),
+                i1  = 1,
+                i2  = 0,
+                o   = eth_tx_clk_o,
             ),
             Instance("CC_OBUF",
                 p_DELAY_OBF = tx_delay_taps,
@@ -172,13 +170,14 @@ class LiteEthPHYRGMII(LiteXModule):
     tx_clk_freq = 125e6
     rx_clk_freq = 125e6
     def __init__(self, clock_pads, pads, with_hw_init_reset=True,
-        tx_delay           = 0e-10,
-        rx_delay           = 0e-10,
-        perf_mode          = "speed"
+        tx_delay           = 0.0e-10, # 7.5e-10,
+        rx_delay           = 0.0e-10, # 7.5e-10
+        perf_mode          = "speed",
+        corner             = "worst"
         ):
-        self.crg = LiteEthPHYRGMIICRG(clock_pads, pads, with_hw_init_reset, tx_delay, perf_mode)
+        self.crg = LiteEthPHYRGMIICRG(clock_pads, pads, with_hw_init_reset, tx_delay, perf_mode, corner)
         self.tx  = ClockDomainsRenamer("eth_tx")(LiteEthPHYRGMIITX(pads))
-        self.rx  = ClockDomainsRenamer("eth_rx")(LiteEthPHYRGMIIRX(pads, rx_delay))
+        self.rx  = ClockDomainsRenamer("eth_rx")(LiteEthPHYRGMIIRX(pads, rx_delay, perf_mode, corner))
         self.sink, self.source = self.tx.sink, self.rx.source
 
         if hasattr(pads, "mdc"):
