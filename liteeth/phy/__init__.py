@@ -28,10 +28,11 @@ from liteeth.phy.gmii     import LiteEthPHYGMII
 from liteeth.phy.gmii_mii import LiteEthPHYGMIIMII
 from liteeth.phy.xgmii    import LiteEthPHYXGMII
 
-from liteeth.phy.s6rgmii   import LiteEthPHYRGMII as LiteEthS6PHYRGMII
-from liteeth.phy.s7rgmii   import LiteEthPHYRGMII as LiteEthS7PHYRGMII
-from liteeth.phy.usrgmii   import LiteEthPHYRGMII as LiteEthUSPHYRGMII
-from liteeth.phy.ecp5rgmii import LiteEthPHYRGMII as LiteEthECP5PHYRGMII
+from liteeth.phy.s6rgmii       import LiteEthPHYRGMII as LiteEthS6PHYRGMII
+from liteeth.phy.s7rgmii       import LiteEthPHYRGMII as LiteEthS7PHYRGMII
+from liteeth.phy.usrgmii       import LiteEthPHYRGMII as LiteEthUSPHYRGMII
+from liteeth.phy.ecp5rgmii     import LiteEthPHYRGMII as LiteEthECP5PHYRGMII
+from liteeth.phy.gatematergmii import LiteEthPHYRGMII as LiteEthGATEMATEPHYRGMII
 
 from liteeth.phy.a7_1000basex      import A7_1000BASEX
 from liteeth.phy.a7_1000basex      import A7_2500BASEX
