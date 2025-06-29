@@ -36,6 +36,7 @@ from litex.gen import *
 from litex.build.generic_platform import *
 from litex.build.xilinx.platform import XilinxPlatform
 from litex.build.lattice.platform import LatticePlatform
+from litex.build.colognechip      import CologneChipPlatform
 
 from litex.soc.interconnect import wishbone
 from litex.soc.interconnect import axi
@@ -284,6 +285,7 @@ class PHYCore(SoCMini):
         elif phy in [
             liteeth_phys.LiteEthS7PHYRGMII,
             liteeth_phys.LiteEthECP5PHYRGMII,
+            liteeth_phys.LiteEthGATEMATEPHYRGMII,
         ]:
             ethphy = phy(
                 clock_pads         = platform.request("rgmii_clocks"),
@@ -690,6 +692,9 @@ def main():
     elif core_config["vendor"] == "xilinx":
         toolchain = core_config.get("toolchain", "vivado")
         platform  = XilinxPlatform(core_config["device"], io=[], toolchain=toolchain)
+    elif core_config["vendor"] == "colognechip":
+        toolchain = core_config.get("toolchain", "colognechip")
+        platform  = CologneChipPlatform(core_config["device"], io=[], toolchain=toolchain)
     else:
         raise ValueError("Unsupported vendor: {}".format(core_config["vendor"]))
     platform.add_extension(_io)
